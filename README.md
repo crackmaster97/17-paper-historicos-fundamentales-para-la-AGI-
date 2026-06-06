@@ -1,3 +1,5 @@
+ https://crackmaster97.github.io/17-paper-historicos-fundamentales-
+
 # 17-paper-historicos-fundamentales-para-la-AGI-
 
 Cada card muestra un paper con su año, autores, un resumen, y una barra de relevancia. Si hacés click en cualquiera, se abre un panel con el análisis completo: qué propone, por qué importa, cómo funciona técnicamente, sus limitaciones, y cómo influye en la IA de hoy.
