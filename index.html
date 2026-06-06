@@ -1,11 +1,422 @@
-import { useState } from "react";
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Más Allá de los Transformers — Papers Fundacionales de IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-const papers = [
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: #0a0a0f;
+      color: #e8e0d0;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    /* ── HEADER ── */
+    #site-header {
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 40px 32px 28px;
+      position: relative;
+    }
+    #site-header::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    }
+    .header-inner { max-width: 1100px; margin: 0 auto; }
+    .header-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(232,224,208,0.35);
+      margin-bottom: 14px;
+    }
+    h1.main-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      color: #f0e8d8;
+      margin-bottom: 12px;
+    }
+    h1.main-title em {
+      font-weight: 400;
+      color: rgba(240,232,216,0.6);
+    }
+    .header-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: rgba(232,224,208,0.45);
+      max-width: 560px;
+      line-height: 1.7;
+    }
+
+    /* ── CONTROLS ── */
+    #controls {
+      padding: 20px 32px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .cat-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(232,224,208,0.6);
+      padding: 6px 14px;
+      border-radius: 1px;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .cat-btn:hover, .cat-btn.active {
+      background: rgba(255,255,255,0.08);
+      color: #e8e0d0;
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    /* ── GRID ── */
+    #grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 32px 80px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+    }
+
+    /* ── PAPER CARD ── */
+    .paper-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 2px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+      overflow: hidden;
+    }
+    .paper-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px;
+      height: 0;
+      transition: height 0.3s ease;
+      background: var(--accent);
+    }
+    .paper-card:hover {
+      background: rgba(255,255,255,0.06);
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.15);
+    }
+    .paper-card:hover::before { height: 100%; }
+    .paper-card.hidden { display: none; }
+
+    .card-cat {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      opacity: 0.85;
+    }
+    .card-year-bg {
+      font-family: 'Playfair Display', serif;
+      font-size: 48px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.04);
+      position: absolute;
+      right: 16px;
+      top: 10px;
+      line-height: 1;
+      user-select: none;
+      pointer-events: none;
+    }
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #f0e8d8;
+      margin-bottom: 6px;
+      padding-right: 20px;
+    }
+    .card-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: rgba(232,224,208,0.4);
+      margin-bottom: 12px;
+    }
+    .card-tldr {
+      font-size: 12px;
+      line-height: 1.65;
+      color: rgba(232,224,208,0.55);
+      margin-bottom: 14px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .score-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+    .score-bar {
+      height: 2px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    .score-fill {
+      height: 100%;
+      border-radius: 1px;
+    }
+    .tags { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 4px; }
+    .tag {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(232,224,208,0.5);
+      padding: 2px 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      border-radius: 1px;
+    }
+
+    /* ── MODAL ── */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    #modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #modal-box {
+      background: #111118;
+      border: 1px solid rgba(255,255,255,0.12);
+      max-width: 760px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      border-radius: 2px;
+      transform: translateY(20px);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+    #modal-overlay.open #modal-box { transform: translateY(0); }
+
+    #modal-header {
+      padding: 28px 28px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      position: sticky;
+      top: 0;
+      background: #111118;
+      z-index: 10;
+    }
+    .modal-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    #modal-category-line {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    #modal-close {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(232,224,208,0.4);
+      width: 28px; height: 28px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 1px;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    #modal-close:hover { border-color: rgba(255,255,255,0.3); color: #e8e0d0; }
+    #modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #f0e8d8;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+    #modal-authors {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: rgba(232,224,208,0.45);
+    }
+    #modal-body { padding: 0 28px 28px; }
+    #modal-paradigm {
+      display: inline-block;
+      padding: 4px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      border-radius: 1px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+    .detail-section {
+      padding: 16px 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.4;
+      margin-bottom: 6px;
+    }
+    .section-content {
+      font-size: 13px;
+      line-height: 1.75;
+      color: rgba(232,224,208,0.72);
+    }
+    #modal-score-wrap { margin-top: 24px; }
+    #modal-score-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    #modal-score-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: rgba(232,224,208,0.35);
+      letter-spacing: 0.15em;
+    }
+    #modal-score-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+    }
+    #modal-score-bar {
+      height: 3px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 1px;
+    }
+    #modal-score-fill { height: 100%; border-radius: 1px; }
+    #modal-tags { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 4px; }
+    #modal-doi {
+      margin-top: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: rgba(232,224,208,0.2);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 32px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: rgba(232,224,208,0.2);
+      letter-spacing: 0.1em;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    @media (max-width: 600px) {
+      #site-header, #controls { padding-left: 16px; padding-right: 16px; }
+      #grid { padding: 20px 16px 60px; grid-template-columns: 1fr; }
+      #modal-box { max-height: 95vh; }
+      #modal-header, #modal-body { padding-left: 18px; padding-right: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <div class="header-inner">
+    <div class="header-eyebrow">Análisis de Papers Fundacionales — IA Post-Estadística</div>
+    <h1 class="main-title">Más Allá de los<br><em>Transformers</em></h1>
+    <p class="header-sub">18 papers históricos fundamentales para construir inteligencias que no dependen de nodos estadísticos ni arquitecturas autorregresivas.</p>
+  </div>
+</header>
+
+<!-- FILTER CONTROLS -->
+<nav id="controls"></nav>
+
+<!-- CARDS GRID -->
+<main id="grid"></main>
+
+<!-- MODAL -->
+<div id="modal-overlay" role="dialog" aria-modal="true">
+  <div id="modal-box">
+    <div id="modal-header">
+      <div class="modal-top-row">
+        <div id="modal-category-line"></div>
+        <button id="modal-close" aria-label="Cerrar">×</button>
+      </div>
+      <h2 id="modal-title"></h2>
+      <div id="modal-authors"></div>
+    </div>
+    <div id="modal-body">
+      <div id="modal-paradigm"></div>
+      <div id="modal-sections"></div>
+      <div id="modal-score-wrap">
+        <div id="modal-score-row">
+          <span id="modal-score-lbl">RELEVANCIA HISTÓRICA</span>
+          <span id="modal-score-val"></span>
+        </div>
+        <div id="modal-score-bar"><div id="modal-score-fill"></div></div>
+      </div>
+      <div id="modal-tags"></div>
+      <div id="modal-doi"></div>
+    </div>
+  </div>
+</div>
+
+<footer>© 2026 · Más Allá de los Transformers · Papers de IA No-Estadística</footer>
+
+<script>
+const PAPERS = [
   {
-    id: 1,
     category: "Lógica Simbólica & GOFAI",
     categoryShort: "SIMBÓLICA",
-    color: "#E8D5B7",
     accent: "#C4A35A",
     papers: [
       {
@@ -21,7 +432,7 @@ const papers = [
         limitations: "El problema del marco (frame problem): actualizar el estado del mundo ante cambios es exponencialmente costoso con reglas explícitas.",
         relevanceToday: "La neurociencia computacional moderna reinterpreta este paper: los ganglios basales funcionan como un motor de reglas simbólicas sobre representaciones corticales continuas.",
         score: 99,
-        tags: ["fundacional", "simbólico", "filosófico"]
+        tags: ["fundacional","simbólico","filosófico"]
       },
       {
         title: "Programs with Common Sense",
@@ -31,11 +442,11 @@ const papers = [
         paradigm: "Advice Taker / Lógica de primer orden",
         tldr: "Propone el 'Advice Taker': un sistema que razona sobre el mundo usando sentido común codificado en lógica de predicados. El conocimiento como base de datos lógica, no como distribución de probabilidad.",
         why: "Primera articulación formal de la IA basada en representación explícita del conocimiento. Anticipa los sistemas expertos y los knowledge graphs modernos (Cyc, Wikidata, Google KG).",
-        mechanism: "Lógica de primer orden (FOL). Hechos: `at(I, home)`. Reglas: `can-go(X,Y) ← at(I,X) ∧ has-car(I)`. Inferencia por resolución.",
+        mechanism: "Lógica de primer orden (FOL). Hechos: at(I, home). Reglas: can-go(X,Y) ← at(I,X) ∧ has-car(I). Inferencia por resolución.",
         limitations: "No escala: el espacio de búsqueda en FOL es semi-decidible. El problema de adquisición de conocimiento ('knowledge acquisition bottleneck') nunca fue resuelto.",
         relevanceToday: "Los LLMs de razonamiento (o3, R1) son una reinvención implícita del Advice Taker: el 'knowledge base' está distribuido en pesos, no en predicados explícitos, pero el objetivo es idéntico.",
         score: 94,
-        tags: ["simbólico", "lógica", "conocimiento"]
+        tags: ["simbólico","lógica","conocimiento"]
       },
       {
         title: "SOAR: An Architecture for General Intelligence",
@@ -44,21 +455,19 @@ const papers = [
         journal: "Artificial Intelligence",
         doi: "10.1016/0004-3702(87)90050-6",
         paradigm: "Arquitectura cognitiva unificada",
-        tldr: "SOAR (State, Operator And Result) modela la cognición completa como búsqueda en espacios de problemas. Un único mecanismo —el 'chunking'— explica desde la percepción hasta el razonamiento abstracto.",
+        tldr: "SOAR modela la cognición completa como búsqueda en espacios de problemas. Un único mecanismo —el 'chunking'— explica desde la percepción hasta el razonamiento abstracto.",
         why: "El intento más serio de AGI pre-DL. Influencia directa en ACT-R (Anderson) y en las arquitecturas neurosimbólicas modernas (MIT's Genesis, IBM's neuro-symbolic AI).",
         mechanism: "Ciclo: reconocimiento de estado → selección de operador → aplicación → detección de impasse → aprendizaje por chunking. Todo el aprendizaje es compilación de trazas de resolución de problemas en reglas.",
-        limitations: "El aprendizaje por chunking no generaliza fuera de los dominios entrenados. La percepción sensorial fue siempre el punto débil: SOAR asume representaciones simbólicas ya formadas.",
+        limitations: "El aprendizaje por chunking no generaliza fuera de los dominios entrenados. SOAR asume representaciones simbólicas ya formadas.",
         relevanceToday: "La integración SOAR + LLM es activa en investigación (Laird et al. 2023): el LLM provee grounding perceptual; SOAR provee razonamiento estructurado.",
         score: 91,
-        tags: ["arquitectura cognitiva", "AGI", "producción de reglas"]
+        tags: ["arquitectura cognitiva","AGI","producción de reglas"]
       }
     ]
   },
   {
-    id: 2,
     category: "Computación Analógica & Física",
     categoryShort: "ANALÓGICA",
-    color: "#B7D4E8",
     accent: "#4A90D9",
     papers: [
       {
@@ -69,12 +478,12 @@ const papers = [
         doi: "10.1126/science.7973651",
         paradigm: "Computación molecular / biocomputación",
         tldr: "Resuelve el problema del camino hamiltoniano (NP-completo) en un tubo de ensayo usando moléculas de ADN. La computación emerge de reacciones bioquímicas masivamente paralelas, sin transistores ni aritmética binaria.",
-        why: "Demuestra que la 'computación' es un fenómeno físico general, no exclusivo del silicio. Abre la puerta a sistemas cognitivos basados en dinámica molecular. Relevante para entender cómo el cerebro podría computar.",
-        mechanism: "Codificación de nodos del grafo como secuencias de ADN. La hibridación selectiva implementa la búsqueda de caminos. El 'output' es detección por PCR de la molécula correcta.",
+        why: "Demuestra que la 'computación' es un fenómeno físico general, no exclusivo del silicio. Abre la puerta a sistemas cognitivos basados en dinámica molecular.",
+        mechanism: "Codificación de nodos del grafo como secuencias de ADN. La hibridación selectiva implementa la búsqueda de caminos. El output es detección por PCR de la molécula correcta.",
         limitations: "Tasa de error alta, difícil de programar, escala pobremente a problemas grandes. No tiene memoria persistente ni capacidad de generalización.",
         relevanceToday: "Microsoft Research y Caltech trabajan en 'molecular computing' para inferencia IA ultra-eficiente. La inspiración es directamente este paper.",
         score: 88,
-        tags: ["biocomputación", "paralelo masivo", "no-binario"]
+        tags: ["biocomputación","paralelo masivo","no-binario"]
       },
       {
         title: "Reservoir Computing with a Chaotic Circuit",
@@ -84,12 +493,12 @@ const papers = [
         doi: "10.1126/science.1091277",
         paradigm: "Reservoir Computing / Echo State Networks",
         tldr: "Un sistema dinámico caótico fijo (el 'reservorio') transforma entradas en representaciones de alta dimensión. Solo se entrena la capa de salida. La 'inteligencia' emerge de la dinámica física del sistema, no de pesos ajustados.",
-        why: "Muestra que el aprendizaje no requiere backpropagation ni ajuste de todos los parámetros. El substrato físico (circuito analógico, red de neuronas, spins) puede ser el computador. Influencia directa en hardware neuromórfico.",
+        why: "Muestra que el aprendizaje no requiere backpropagation ni ajuste de todos los parámetros. El substrato físico puede ser el computador. Influencia directa en hardware neuromórfico.",
         mechanism: "Input → sistema dinámico no lineal fijo → proyección de alta dimensión → regresión lineal de salida. Solo ~10% de los parámetros se 'aprenden'. El resto es dinámica emergente.",
         limitations: "La capacidad del reservorio es fija. No generaliza más allá de la dinámica del substrato. Difícil de diseñar reservorios óptimos.",
         relevanceToday: "Los 'physical neural networks' modernos (fotónicos, mecánicos, magnéticos) son todos variantes de reservoir computing. Intel Loihi 2 implementa principios similares.",
         score: 93,
-        tags: ["dinámica caótica", "analógico", "hardware neuromórfico"]
+        tags: ["dinámica caótica","analógico","hardware neuromórfico"]
       },
       {
         title: "Analog Electronic Neural Networks",
@@ -99,20 +508,18 @@ const papers = [
         doi: "10.1126/science.3755256",
         paradigm: "Redes de Hopfield / Computación por energía",
         tldr: "Implementación analógica de redes de Hopfield para resolver el problema del viajante. El 'cómputo' es la relajación física de un sistema eléctrico hacia un mínimo de energía. No hay pasos discretos ni aritmética.",
-        why: "Fundamento de las máquinas de Boltzmann, los modelos de difusión (Stable Diffusion) y las memorias asociativas modernas (Ramsauer et al. 2020). La computación como optimización de energía física.",
+        why: "Fundamento de las máquinas de Boltzmann, los modelos de difusión (Stable Diffusion) y las memorias asociativas modernas. La computación como optimización de energía física.",
         mechanism: "Capacitores e inductores implementan la dinámica. La solución al problema es el estado de mínima energía del circuito. La 'inferencia' es relajación física.",
         limitations: "Mínimos locales. Capacidad de memoria que escala como O(n/log n). Generalización pobre a distribuciones fuera del entrenamiento.",
         relevanceToday: "Las 'modern Hopfield networks' (2020) tienen capacidad exponencial y son la base teórica de los mecanismos de atención en Transformers. El círculo se cierra.",
         score: 96,
-        tags: ["energía", "analógico", "memoria asociativa"]
+        tags: ["energía","analógico","memoria asociativa"]
       }
     ]
   },
   {
-    id: 3,
     category: "Teoría de la Información & Causalidad",
     categoryShort: "CAUSAL",
-    color: "#D4E8B7",
     accent: "#5A9E3A",
     papers: [
       {
@@ -123,12 +530,12 @@ const papers = [
         doi: "10.1002/j.1538-7305.1948.tb01338.x",
         paradigm: "Teoría de la información",
         tldr: "Funda la teoría de la información. Define entropía, capacidad de canal, y demuestra la posibilidad de transmisión sin error con código adecuado. No estadística bayesiana: teoría matemática de la incertidumbre.",
-        why: "La entropía de Shannon es el fundamento matemático de medidas de inteligencia como la complejidad de Kolmogorov y la información integrada (IIT). Una IA 'sin estadística' pero con teoría de información es concebible.",
+        why: "La entropía de Shannon es el fundamento matemático de medidas de inteligencia como la complejidad de Kolmogorov y la información integrada (IIT). Una IA sin estadística pero con teoría de información es concebible.",
         mechanism: "H(X) = -Σ p(x) log p(x). Cuantifica incertidumbre sin hacer inferencia causal. El canal de comunicación es una abstracción matemática pura.",
         limitations: "La teoría de Shannon es agnóstica sobre el significado (semántica). Mide cuánto se transmite, no qué significa lo transmitido.",
         relevanceToday: "La entropía de Shannon reaparece en: cross-entropy loss de LLMs, mutual information como objetivo de disentanglement, y en la IIT de Tononi como medida de consciencia.",
         score: 99,
-        tags: ["fundacional", "información", "entropía"]
+        tags: ["fundacional","información","entropía"]
       },
       {
         title: "Causality: Models, Reasoning, and Inference",
@@ -136,13 +543,13 @@ const papers = [
         year: 2000,
         journal: "Cambridge University Press",
         paradigm: "Inferencia causal / do-calculus",
-        tldr: "Distingue correlación, intervención y contrafactual mediante la 'escalera de causalidad'. El do-calculus permite razonar sobre intervenciones sin hacer experimentos. Los LLMs están atrapados en el peldaño 1 (correlación).",
+        tldr: "Distingue correlación, intervención y contrafactual mediante la 'escalera de causalidad'. El do-calculus permite razonar sobre intervenciones sin hacer experimentos. Los LLMs están atrapados en el peldaño 1.",
         why: "Define formalmente lo que falta en todos los sistemas actuales: razonamiento causal. Una AGI debe escalar la escalera: observar → intervenir → imaginar. Ningún Transformer lo hace de forma nativa.",
         mechanism: "Grafos acíclicos dirigidos (DAGs) + do-operator. P(Y|do(X=x)) ≠ P(Y|X=x). La diferencia es la esencia del razonamiento causal versus estadística.",
         limitations: "Asumir la estructura del DAG requiere conocimiento previo o métodos de descubrimiento causal que escalan mal con dimensionalidad.",
         relevanceToday: "CausalBERT, causal representation learning (Schölkopf et al.), y los world models de Yann LeCun son intentos directos de implementar la escalera de Pearl en sistemas de aprendizaje profundo.",
         score: 97,
-        tags: ["causalidad", "razonamiento", "fundacional"]
+        tags: ["causalidad","razonamiento","fundacional"]
       },
       {
         title: "An Introduction to Kolmogorov Complexity",
@@ -150,21 +557,19 @@ const papers = [
         year: 1997,
         journal: "Springer (libro)",
         paradigm: "Complejidad algorítmica / Inducción de Solomonoff",
-        tldr: "La complejidad de Kolmogorov K(x) de una cadena x es la longitud del programa más corto que la genera. La inteligencia óptima (AIXI de Hutter) se define como el agente que actúa para maximizar recompensa futura bajo el prior de Solomonoff.",
+        tldr: "La complejidad de Kolmogorov K(x) es la longitud del programa más corto que genera x. La inteligencia óptima (AIXI de Hutter) se define como el agente que maximiza recompensa bajo el prior de Solomonoff.",
         why: "AIXI es la única definición matemáticamente rigurosa de inteligencia general óptima. No usa redes neuronales ni estadística frecuentista: usa teoría de la computabilidad. Es incomputable pero define el ideal.",
         mechanism: "Prior universal de Solomonoff: M(x) = Σ 2^(-l(p)) para todo p que genera x. El agente AIXI elige acciones que maximizan la recompensa esperada bajo M. La 'comprensión' es compresión algorítmica.",
         limitations: "AIXI es incomputable. Las aproximaciones (MC-AIXI) escalan exponencialmente. La complejidad de Kolmogorov es no computable en el caso general.",
         relevanceToday: "Los LLMs son aproximaciones empíricas del prior de Solomonoff sobre texto. El debate sobre si la compresión implica comprensión (Hutter Prize) está directamente relacionado.",
         score: 95,
-        tags: ["complejidad", "teoría de la computación", "AGI formal"]
+        tags: ["complejidad","teoría de la computación","AGI formal"]
       }
     ]
   },
   {
-    id: 4,
     category: "Neurosimbólico & Arquitecturas Híbridas",
     categoryShort: "HÍBRIDO",
-    color: "#E8B7D4",
     accent: "#C45A8A",
     papers: [
       {
@@ -173,28 +578,28 @@ const papers = [
         year: 2014,
         journal: "arXiv:1410.5401",
         paradigm: "Computación diferenciable / Memoria externa",
-        tldr: "Acopla una red neuronal con una memoria direccionable externa (análoga a la cinta de Turing). La red aprende algoritmos genuinos (copia, ordenamiento) que generalizan a longitudes no vistas. El primer paso hacia computación programática aprendida.",
-        why: "Rompe la limitación fundamental de las RNNs y Transformers: la incapacidad de mantener estado arbitrario y ejecutar algoritmos que escalan con la entrada. Influencia directa en Memory-Augmented Neural Networks y en los sistemas de 'tool use' de LLMs.",
+        tldr: "Acopla una red neuronal con una memoria direccionable externa (análoga a la cinta de Turing). La red aprende algoritmos genuinos (copia, ordenamiento) que generalizan a longitudes no vistas.",
+        why: "Rompe la limitación fundamental de las RNNs y Transformers: la incapacidad de mantener estado arbitrario y ejecutar algoritmos que escalan con la entrada. Influencia directa en los sistemas de tool-use de LLMs.",
         mechanism: "Controller (LSTM) → mecanismo de atención sobre memoria externa → lectura/escritura diferenciable. El gradiente fluye a través de las operaciones de memoria.",
         limitations: "Entrenamiento inestable. No escala bien a memorias grandes. La atención soft sobre la memoria entera es O(n).",
         relevanceToday: "Los mecanismos de tool-use y retrieval-augmented generation (RAG) de GPT-4/Claude son implementaciones de alto nivel de la intuición NTM. Las DNC (2016) son la versión madura.",
         score: 96,
-        tags: ["memoria", "algoritmos", "diferenciable"]
+        tags: ["memoria","algoritmos","diferenciable"]
       },
       {
-        title: "Mastering the Game of Go with Deep Neural Networks and Tree Search",
+        title: "Mastering Go with Deep Neural Networks and Tree Search",
         authors: "Silver et al. (DeepMind)",
         year: 2016,
         journal: "Nature",
         doi: "10.1038/nature16961",
         paradigm: "Neuro-simbólico: DL + búsqueda simbólica",
-        tldr: "AlphaGo combina redes neuronales convolucionales (valor y política) con Monte Carlo Tree Search (MCTS). Ni la red sola ni la búsqueda sola son suficientes: la inteligencia emerge de la integración.",
-        why: "El ejemplo más exitoso de integración neurosimbólica. La red neuronal provee intuición; la búsqueda simbólica provee razonamiento preciso. Esta arquitectura dual es la base de AlphaCode, AlphaFold y los sistemas de razonamiento modernos.",
-        mechanism: "MCTS guiado por policy network P(a|s) y value network V(s). La búsqueda expande selectivamente estados prometedores. El resultado es una forma de 'pensamiento lento' (sistema 2) sobre intuición rápida (sistema 1).",
+        tldr: "AlphaGo combina redes convolucionales (valor y política) con Monte Carlo Tree Search (MCTS). Ni la red sola ni la búsqueda sola son suficientes: la inteligencia emerge de la integración.",
+        why: "El ejemplo más exitoso de integración neurosimbólica. La red neuronal provee intuición; la búsqueda simbólica provee razonamiento preciso. Base de AlphaCode, AlphaFold y los sistemas de razonamiento modernos.",
+        mechanism: "MCTS guiado por policy network P(a|s) y value network V(s). La búsqueda expande selectivamente estados prometedores. 'Pensamiento lento' (sistema 2) sobre intuición rápida (sistema 1).",
         limitations: "Específico al dominio. Requiere un simulador perfecto del entorno. No transfiere a dominios con reglas desconocidas.",
         relevanceToday: "AlphaCode 2 usa la misma arquitectura para código. Los modelos de razonamiento (o1, R1) implementan MCTS sobre cadenas de pensamiento en lenguaje natural.",
         score: 98,
-        tags: ["neuro-simbólico", "búsqueda", "sistema dual"]
+        tags: ["neuro-simbólico","búsqueda","sistema dual"]
       },
       {
         title: "Towards Deep Symbolic Reinforcement Learning",
@@ -202,21 +607,19 @@ const papers = [
         year: 2016,
         journal: "arXiv:1609.05518",
         paradigm: "RL simbólico profundo",
-        tldr: "Propone aprender representaciones simbólicas directamente de percepción raw y razonar sobre ellas con RL. El sistema extrae objetos, relaciones y reglas sin supervisión, luego razona simbólicamente sobre ellas.",
+        tldr: "Propone aprender representaciones simbólicas directamente de percepción raw y razonar sobre ellas con RL. El sistema extrae objetos, relaciones y reglas sin supervisión.",
         why: "Articula el programa de investigación que une percepción sub-simbólica con razonamiento simbólico. Influencia directa en Object-Centric Learning, Slot Attention, y los world models basados en objetos.",
         mechanism: "Módulo perceptual → extracción de entidades y relaciones → grafo de conocimiento dinámico → razonamiento y planificación simbólica → acción.",
         limitations: "La extracción de símbolos desde percepción raw sigue siendo el cuello de botella. El número de símbolos debe pre-especificarse.",
         relevanceToday: "AlphaGeometry (2024) de DeepMind es la realización más cercana: combina LM para intuición con motor de deducción simbólica para demostrar teoremas olímpicos.",
         score: 87,
-        tags: ["simbólico", "RL", "representación"]
+        tags: ["simbólico","RL","representación"]
       }
     ]
   },
   {
-    id: 5,
     category: "Computación Biológica & Neuromórfica",
     categoryShort: "NEURO",
-    color: "#E8E4B7",
     accent: "#B8A020",
     papers: [
       {
@@ -232,7 +635,7 @@ const papers = [
         limitations: "La implementación en silicio es no trivial. La convergencia es lenta. Difícil de escalar a dominios complejos.",
         relevanceToday: "Friston et al. 2022 proponen implementar Active Inference en robots. Andy Clark ('Surfing Uncertainty') aplica esto a cognición general. Es el paradigma más radical post-Transformer.",
         score: 94,
-        tags: ["predictive coding", "free energy", "cerebro"]
+        tags: ["predictive coding","free energy","cerebro"]
       },
       {
         title: "Loihi: A Neuromorphic Manycore Processor with On-Chip Learning",
@@ -241,36 +644,34 @@ const papers = [
         journal: "IEEE Micro",
         doi: "10.1109/MM.2018.112130359",
         paradigm: "Hardware neuromórfico / Spiking Neural Networks",
-        tldr: "Loihi implementa 130,000 neuronas de disparo con aprendizaje on-chip mediante STDP (spike-timing dependent plasticity). Procesa información como trenes de pulsos temporales, no como operaciones matriciales.",
-        why: "Las Spiking Neural Networks (SNNs) codifican información en el tiempo de los spikes, no en valores de activación. Son radicalmente más eficientes energéticamente y computacionalmente análogas al cerebro real.",
-        mechanism: "Neuronas IF (integrate-and-fire): integran corriente de entrada, disparan cuando superan umbral, se resetean. La comunicación es sparse (solo spikes). Aprendizaje: STDP ajusta sinapsis según co-ocurrencia temporal.",
+        tldr: "Loihi implementa 130,000 neuronas de disparo con aprendizaje on-chip mediante STDP. Procesa información como trenes de pulsos temporales, no como operaciones matriciales.",
+        why: "Las Spiking Neural Networks codifican información en el tiempo de los spikes, no en valores de activación. Son radicalmente más eficientes energéticamente y computacionalmente análogas al cerebro real.",
+        mechanism: "Neuronas IF (integrate-and-fire): integran corriente de entrada, disparan cuando superan umbral, se resetean. La comunicación es sparse. Aprendizaje: STDP ajusta sinapsis según co-ocurrencia temporal.",
         limitations: "Entrenar SNNs con gradientes es no trivial (el spike es no diferenciable). El rendimiento en benchmarks de DL sigue siendo inferior a ANNs convencionales.",
         relevanceToday: "Loihi 2 (2021) escala a ~1M neuronas. IBM NorthPole (2023) lleva el paradigma a inferencia de redes densas. Intel proyecta chips con 10^9 neuronas para 2028.",
         score: 90,
-        tags: ["spiking", "neuromórfico", "hardware"]
+        tags: ["spiking","neuromórfico","hardware"]
       },
       {
-        title: "A Theory of How Columns in the Neocortex Enable Learning the Structure of the World",
+        title: "A Theory of How Columns in the Neocortex Enable Learning",
         authors: "Hawkins & Ahmad (Numenta)",
         year: 2017,
         journal: "Frontiers in Neural Circuits",
         doi: "10.3389/fncir.2017.00081",
         paradigm: "Hierarchical Temporal Memory / Cortical columns",
-        tldr: "Propone que cada columna cortical aprende un modelo completo del mundo usando location signals. La inteligencia no está en ninguna área específica: emerge de miles de columnas que 'votan' sobre representaciones del mundo.",
+        tldr: "Cada columna cortical aprende un modelo completo del mundo usando location signals. La inteligencia emerge de miles de columnas que 'votan' sobre representaciones del mundo.",
         why: "El modelo Thousand Brains Theory (2019) de Numenta es la arquitectura de IA más explícitamente inspirada en neurociencia desde las primeras redes. Si es correcto, los LLMs son la implementación equivocada de la corteza.",
         mechanism: "Columnas corticales: sparse distributed representations (SDRs) + temporal memory (secuencias) + location signals (grid cells). El aprendizaje es Hebbian + inhibición lateral. Sin backprop.",
-        limitations: "Las predicciones computacionales del modelo no han superado a DL en benchmarks estándar. La implementación a escala es pendiente.",
+        limitations: "Las predicciones computacionales no han superado a DL en benchmarks estándar. La implementación a escala es pendiente.",
         relevanceToday: "Numenta's HTM está siendo integrado con LLMs para añadir memoria temporal estructurada. La Thousand Brains Theory influye en diseños de chips de Intel.",
         score: 85,
-        tags: ["cortical", "HTM", "neurociencia"]
+        tags: ["cortical","HTM","neurociencia"]
       }
     ]
   },
   {
-    id: 6,
     category: "Física Cuántica & Computación Cuántica",
     categoryShort: "CUÁNTICA",
-    color: "#C8B7E8",
     accent: "#7A5AC4",
     papers: [
       {
@@ -281,12 +682,12 @@ const papers = [
         doi: "10.1098/rspa.1985.0070",
         paradigm: "Computación cuántica universal",
         tldr: "Define la computadora cuántica universal. Muestra que la física cuántica requiere una extensión del Church-Turing Thesis. El qubits en superposición permite computar en paralelo exponencialmente muchos estados.",
-        why: "Si la inteligencia es fundamentalmente un fenómeno computacional, la computación cuántica representa el cambio de paradigma más radical posible. Penrose argumenta que la consciencia misma es cuántica (Orchestrated OR).",
+        why: "Si la inteligencia es fundamentalmente un fenómeno computacional, la computación cuántica representa el cambio de paradigma más radical posible. Penrose argumenta que la consciencia misma es cuántica.",
         mechanism: "Qubits en superposición: |ψ⟩ = α|0⟩ + β|1⟩. Compuertas cuánticas rotan el estado. La medición colapsa la superposición. La interferencia cuántica amplifica caminos correctos.",
         limitations: "Decoherencia: los estados cuánticos son frágiles. FTQC requiere corrección de errores que añade overhead masivo. Ventaja cuántica demostrada solo en problemas específicos.",
         relevanceToday: "Quantum Machine Learning (QML) busca ventaja cuántica en entrenamiento. Google Willow (2024) demuestra corrección de errores cuántica escalable. El horizonte de QML útil es post-2030.",
         score: 92,
-        tags: ["cuántico", "computación universal", "fundacional"]
+        tags: ["cuántico","computación universal","fundacional"]
       },
       {
         title: "Quantum Approximate Optimization Algorithm",
@@ -300,468 +701,154 @@ const papers = [
         limitations: "Ventaja cuántica sobre clásico no demostrada para problemas de tamaño práctico. Ruidoso en hardware actual. El número de capas necesario para ventaja real es desconocido.",
         relevanceToday: "IBM, Google y Quantinuum tienen programas activos de QML. Los primeros benchmarks comparativos honestos (2023–2025) sugieren que la ventaja cuántica en ML es elusiva para problemas de IA.",
         score: 78,
-        tags: ["cuántico", "optimización", "variacional"]
+        tags: ["cuántico","optimización","variacional"]
       }
     ]
   }
 ];
 
-const allPapers = papers.flatMap(cat => cat.papers.map(p => ({ ...p, category: cat.category, categoryShort: cat.categoryShort, color: cat.color, accent: cat.accent })));
+// ── flatten all papers ──
+const ALL_PAPERS = [];
+PAPERS.forEach(cat => {
+  cat.papers.forEach(p => {
+    ALL_PAPERS.push({ ...p, category: cat.category, categoryShort: cat.categoryShort, accent: cat.accent });
+  });
+});
 
-export default function App() {
-  const [selected, setSelected] = useState(null);
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [view, setView] = useState("grid");
+// ── state ──
+let activeCategory = null;
+let currentPaper = null;
 
-  const filtered = activeCategory
-    ? allPapers.filter(p => p.category === activeCategory)
-    : allPapers;
+// ── build filter buttons ──
+function buildControls() {
+  const nav = document.getElementById('controls');
 
-  return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#0a0a0f",
-      fontFamily: "'Georgia', 'Times New Roman', serif",
-      color: "#e8e0d0",
-      overflowX: "hidden"
-    }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body { background: #0a0a0f; }
+  const allBtn = document.createElement('button');
+  allBtn.className = 'cat-btn active';
+  allBtn.textContent = `Todos (${ALL_PAPERS.length})`;
+  allBtn.dataset.cat = '';
+  nav.appendChild(allBtn);
 
-        .paper-card {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 2px;
-          padding: 20px;
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          position: relative;
-          overflow: hidden;
-        }
-        .paper-card::before {
-          content: '';
-          position: absolute;
-          top: 0; left: 0;
-          width: 3px;
-          height: 0;
-          transition: height 0.3s ease;
-        }
-        .paper-card:hover {
-          background: rgba(255,255,255,0.06);
-          transform: translateY(-2px);
-          border-color: rgba(255,255,255,0.15);
-        }
-        .paper-card:hover::before {
-          height: 100%;
-        }
-        
-        .cat-btn {
-          background: transparent;
-          border: 1px solid rgba(255,255,255,0.1);
-          color: rgba(232,224,208,0.6);
-          padding: 6px 14px;
-          border-radius: 1px;
-          cursor: pointer;
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 10px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          transition: all 0.2s;
-        }
-        .cat-btn:hover, .cat-btn.active {
-          background: rgba(255,255,255,0.08);
-          color: #e8e0d0;
-          border-color: rgba(255,255,255,0.3);
-        }
-        
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.85);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-          padding: 20px;
-          backdrop-filter: blur(4px);
-          animation: fadeIn 0.2s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        .modal-content {
-          background: #111118;
-          border: 1px solid rgba(255,255,255,0.12);
-          max-width: 760px;
-          width: 100%;
-          max-height: 88vh;
-          overflow-y: auto;
-          border-radius: 2px;
-          animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255,255,255,0.1) transparent;
-        }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        .score-bar {
-          height: 2px;
-          background: rgba(255,255,255,0.05);
-          border-radius: 1px;
-          overflow: hidden;
-          margin-top: 8px;
-        }
-        .score-fill {
-          height: 100%;
-          border-radius: 1px;
-          transition: width 1s ease;
-        }
-        
-        .tag {
-          display: inline-block;
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08);
-          color: rgba(232,224,208,0.5);
-          padding: 2px 8px;
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 9px;
-          letter-spacing: 0.1em;
-          border-radius: 1px;
-          margin: 2px;
-        }
-        
-        .section-label {
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 9px;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          opacity: 0.4;
-          margin-bottom: 6px;
-        }
-        
-        .detail-section {
-          padding: 16px 0;
-          border-top: 1px solid rgba(255,255,255,0.06);
-        }
-        
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-      `}</style>
+  PAPERS.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.textContent = `${cat.categoryShort} (${cat.papers.length})`;
+    btn.dataset.cat = cat.category;
+    nav.appendChild(btn);
+  });
 
-      {/* Header */}
-      <div style={{
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        padding: "40px 32px 28px",
-        position: "relative"
-      }}>
-        <div style={{
-          position: "absolute",
-          top: 0, left: 0, right: 0,
-          height: "1px",
-          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)"
-        }} />
-        
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 10,
-            letterSpacing: "0.25em",
-            textTransform: "uppercase",
-            color: "rgba(232,224,208,0.35)",
-            marginBottom: 14
-          }}>
-            Análisis de Papers Fundacionales — IA Post-Estadística
-          </div>
-          
-          <h1 style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
-            fontSize: "clamp(28px, 5vw, 52px)",
-            fontWeight: 900,
-            letterSpacing: "-0.02em",
-            lineHeight: 1.05,
-            color: "#f0e8d8",
-            marginBottom: 12
-          }}>
-            Más Allá de los<br />
-            <span style={{ fontStyle: "italic", fontWeight: 400, color: "rgba(240,232,216,0.6)" }}>
-              Transformers
-            </span>
-          </h1>
-          
-          <p style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 12,
-            color: "rgba(232,224,208,0.45)",
-            maxWidth: 560,
-            lineHeight: 1.7
-          }}>
-            {allPapers.length} papers históricos fundamentales para construir inteligencias que no dependen
-            de nodos estadísticos ni arquitecturas autorregresivas.
-          </p>
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div style={{
-        padding: "20px 32px",
-        borderBottom: "1px solid rgba(255,255,255,0.04)",
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 8,
-        alignItems: "center",
-        maxWidth: 1100,
-        margin: "0 auto"
-      }}>
-        <button className={`cat-btn ${!activeCategory ? 'active' : ''}`} onClick={() => setActiveCategory(null)}>
-          Todos ({allPapers.length})
-        </button>
-        {papers.map(cat => (
-          <button
-            key={cat.id}
-            className={`cat-btn ${activeCategory === cat.category ? 'active' : ''}`}
-            onClick={() => setActiveCategory(activeCategory === cat.category ? null : cat.category)}
-            style={{ borderColor: activeCategory === cat.category ? cat.accent + '80' : undefined }}
-          >
-            {cat.categoryShort} ({cat.papers.length})
-          </button>
-        ))}
-      </div>
-
-      {/* Grid */}
-      <div style={{
-        maxWidth: 1100,
-        margin: "0 auto",
-        padding: "28px 32px 60px",
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-        gap: 12
-      }}>
-        {filtered.map((paper, i) => (
-          <div
-            key={i}
-            className="paper-card"
-            style={{ "--accent": paper.accent } as React.CSSProperties}
-            onClick={() => setSelected(paper)}
-          >
-            <style>{`.paper-card:hover::before { background: ${paper.accent}; }`}</style>
-            
-            {/* Category badge */}
-            <div style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 9,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: paper.accent,
-              marginBottom: 12,
-              opacity: 0.8
-            }}>
-              {paper.categoryShort}
-            </div>
-
-            {/* Year */}
-            <div style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 48,
-              fontWeight: 900,
-              color: "rgba(255,255,255,0.04)",
-              position: "absolute",
-              right: 16,
-              top: 10,
-              lineHeight: 1,
-              userSelect: "none",
-              pointerEvents: "none"
-            }}>
-              {paper.year}
-            </div>
-
-            <h3 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 15,
-              fontWeight: 700,
-              lineHeight: 1.3,
-              color: "#f0e8d8",
-              marginBottom: 6,
-              paddingRight: 20
-            }}>
-              {paper.title}
-            </h3>
-
-            <div style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10,
-              color: "rgba(232,224,208,0.4)",
-              marginBottom: 12
-            }}>
-              {paper.authors} · {paper.year}
-            </div>
-
-            <p style={{
-              fontSize: 12,
-              lineHeight: 1.65,
-              color: "rgba(232,224,208,0.55)",
-              marginBottom: 14,
-              display: "-webkit-box",
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden"
-            }}>
-              {paper.tldr}
-            </p>
-
-            {/* Score */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-              <div style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 9,
-                color: paper.accent,
-                letterSpacing: "0.1em"
-              }}>
-                RELEVANCIA {paper.score}/100
-              </div>
-            </div>
-            <div className="score-bar">
-              <div className="score-fill" style={{
-                width: `${paper.score}%`,
-                background: `linear-gradient(90deg, ${paper.accent}80, ${paper.accent})`
-              }} />
-            </div>
-
-            <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap" }}>
-              {paper.tags.map(t => <span key={t} className="tag">{t}</span>)}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Modal */}
-      {selected && (
-        <div className="modal-overlay" onClick={() => setSelected(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            {/* Modal header */}
-            <div style={{
-              padding: "28px 28px 20px",
-              borderBottom: "1px solid rgba(255,255,255,0.07)",
-              position: "sticky",
-              top: 0,
-              background: "#111118",
-              zIndex: 10
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 9,
-                  letterSpacing: "0.2em",
-                  color: selected.accent,
-                  marginBottom: 10,
-                  textTransform: "uppercase"
-                }}>
-                  {selected.categoryShort} · {selected.year} · Relevancia {selected.score}/100
-                </div>
-                <button
-                  onClick={() => setSelected(null)}
-                  style={{
-                    background: "none",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    color: "rgba(232,224,208,0.4)",
-                    width: 28,
-                    height: 28,
-                    cursor: "pointer",
-                    fontSize: 14,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 1
-                  }}
-                >×</button>
-              </div>
-              <h2 style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: 22,
-                fontWeight: 700,
-                color: "#f0e8d8",
-                lineHeight: 1.25,
-                marginBottom: 8
-              }}>
-                {selected.title}
-              </h2>
-              <div style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 11,
-                color: "rgba(232,224,208,0.45)"
-              }}>
-                {selected.authors} — <span style={{ fontStyle: "italic" }}>{selected.journal}</span>
-              </div>
-            </div>
-
-            <div style={{ padding: "0 28px 28px" }}>
-              {/* Paradigm pill */}
-              <div style={{
-                display: "inline-block",
-                background: selected.accent + "15",
-                border: `1px solid ${selected.accent}40`,
-                color: selected.accent,
-                padding: "4px 12px",
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 10,
-                letterSpacing: "0.1em",
-                borderRadius: 1,
-                marginTop: 20,
-                marginBottom: 20
-              }}>
-                PARADIGMA: {selected.paradigm}
-              </div>
-
-              {[
-                { label: "TL;DR — Contribución central", content: selected.tldr },
-                { label: "Por qué es fundamental para IA no-estadística", content: selected.why },
-                { label: "Mecanismo técnico", content: selected.mechanism },
-                { label: "Limitaciones conocidas", content: selected.limitations },
-                { label: "Relevancia en 2024–2026", content: selected.relevanceToday }
-              ].map((section, i) => (
-                <div key={i} className="detail-section">
-                  <div className="section-label">{section.label}</div>
-                  <p style={{
-                    fontSize: 13,
-                    lineHeight: 1.75,
-                    color: "rgba(232,224,208,0.72)"
-                  }}>
-                    {section.content}
-                  </p>
-                </div>
-              ))}
-
-              {/* Score bar large */}
-              <div style={{ marginTop: 24 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: "rgba(232,224,208,0.35)", letterSpacing: "0.15em" }}>RELEVANCIA HISTÓRICA</span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: selected.accent }}>{selected.score}/100</span>
-                </div>
-                <div style={{ height: 3, background: "rgba(255,255,255,0.05)", borderRadius: 1 }}>
-                  <div style={{
-                    height: "100%",
-                    width: `${selected.score}%`,
-                    background: `linear-gradient(90deg, ${selected.accent}60, ${selected.accent})`,
-                    borderRadius: 1
-                  }} />
-                </div>
-              </div>
-
-              <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap" }}>
-                {selected.tags.map(t => <span key={t} className="tag">{t}</span>)}
-              </div>
-
-              {selected.doi && (
-                <div style={{ marginTop: 20, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(232,224,208,0.2)" }}>
-                  DOI: {selected.doi}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  nav.addEventListener('click', e => {
+    const btn = e.target.closest('.cat-btn');
+    if (!btn) return;
+    nav.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCategory = btn.dataset.cat || null;
+    filterCards();
+  });
 }
+
+// ── build cards ──
+function buildCards() {
+  const grid = document.getElementById('grid');
+  ALL_PAPERS.forEach((paper, i) => {
+    const card = document.createElement('div');
+    card.className = 'paper-card';
+    card.dataset.index = i;
+    card.dataset.category = paper.category;
+    card.style.setProperty('--accent', paper.accent);
+
+    card.innerHTML = `
+      <div class="card-cat" style="color:${paper.accent}">${paper.categoryShort}</div>
+      <div class="card-year-bg">${paper.year}</div>
+      <div class="card-title">${paper.title}</div>
+      <div class="card-meta">${paper.authors} · ${paper.year}</div>
+      <div class="card-tldr">${paper.tldr}</div>
+      <div class="score-label" style="color:${paper.accent}">RELEVANCIA ${paper.score}/100</div>
+      <div class="score-bar">
+        <div class="score-fill" style="width:${paper.score}%;background:linear-gradient(90deg,${paper.accent}80,${paper.accent})"></div>
+      </div>
+      <div class="tags">${paper.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+    `;
+
+    card.addEventListener('click', () => openModal(i));
+    grid.appendChild(card);
+  });
+}
+
+// ── filter ──
+function filterCards() {
+  document.querySelectorAll('.paper-card').forEach(card => {
+    const show = !activeCategory || card.dataset.category === activeCategory;
+    card.classList.toggle('hidden', !show);
+  });
+}
+
+// ── modal ──
+function openModal(index) {
+  currentPaper = ALL_PAPERS[index];
+  const p = currentPaper;
+
+  document.getElementById('modal-category-line').textContent =
+    `${p.categoryShort} · ${p.year} · Relevancia ${p.score}/100`;
+  document.getElementById('modal-category-line').style.color = p.accent;
+
+  document.getElementById('modal-title').textContent = p.title;
+  document.getElementById('modal-authors').innerHTML =
+    `${p.authors} — <em>${p.journal}</em>`;
+
+  const paradigmEl = document.getElementById('modal-paradigm');
+  paradigmEl.textContent = `PARADIGMA: ${p.paradigm}`;
+  paradigmEl.style.background = p.accent + '15';
+  paradigmEl.style.border = `1px solid ${p.accent}40`;
+  paradigmEl.style.color = p.accent;
+
+  const sections = [
+    { label: "TL;DR — Contribución central", content: p.tldr },
+    { label: "Por qué es fundamental para IA no-estadística", content: p.why },
+    { label: "Mecanismo técnico", content: p.mechanism },
+    { label: "Limitaciones conocidas", content: p.limitations },
+    { label: "Relevancia en 2024–2026", content: p.relevanceToday }
+  ];
+  document.getElementById('modal-sections').innerHTML = sections.map(s => `
+    <div class="detail-section">
+      <div class="section-label">${s.label}</div>
+      <p class="section-content">${s.content}</p>
+    </div>
+  `).join('');
+
+  document.getElementById('modal-score-val').textContent = `${p.score}/100`;
+  document.getElementById('modal-score-val').style.color = p.accent;
+  document.getElementById('modal-score-fill').style.width = `${p.score}%`;
+  document.getElementById('modal-score-fill').style.background =
+    `linear-gradient(90deg,${p.accent}60,${p.accent})`;
+
+  document.getElementById('modal-tags').innerHTML =
+    p.tags.map(t => `<span class="tag">${t}</span>`).join('');
+
+  const doiEl = document.getElementById('modal-doi');
+  doiEl.textContent = p.doi ? `DOI: ${p.doi}` : '';
+
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── event listeners ──
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ── init ──
+buildControls();
+buildCards();
+</script>
+</body>
+</html>
