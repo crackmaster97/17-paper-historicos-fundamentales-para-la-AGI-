@@ -1,4 +1,4 @@
- https://crackmaster97.github.io/17-paper-historicos-fundamentales-
+https://crackmaster97.github.io/17-paper-historicos-fundamentales-para-la-AGI-/
 
 # 17-paper-historicos-fundamentales-para-la-AGI-
 
